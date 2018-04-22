@@ -16,3 +16,4 @@ target/
 /.classpath
 /.project
 .idea
+spring-social-xing/out

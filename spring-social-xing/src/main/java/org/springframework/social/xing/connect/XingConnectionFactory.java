@@ -16,13 +16,14 @@
 package org.springframework.social.xing.connect;
 
 import org.springframework.social.connect.support.OAuth1ConnectionFactory;
+import org.springframework.social.connect.support.OAuth2ConnectionFactory;
 import org.springframework.social.xing.api.Xing;
 
 /**
  * Xing ConnectionFactory implementation.
  * @author Keith Donald
  */
-public class XingConnectionFactory extends OAuth1ConnectionFactory<Xing>{
+public class XingConnectionFactory extends OAuth2ConnectionFactory<Xing> {
 
 	public XingConnectionFactory(String xingBaseUrl, String consumerKey, String consumerSecret) {
 		super("xing", new XingServiceProvider(xingBaseUrl, consumerKey, consumerSecret), new XingAdapter());

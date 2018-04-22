@@ -38,7 +38,7 @@ abstract class AbstractTemplate {
 
     /**
      * 
-     * @param xingBaseUrl will default to {@link #DEFAULT_BASE_URL} if empty
+     * @param xingBaseUrl will default to {@link XingTemplate#DEFAULT_BASE_URL} if empty
      */
     public AbstractTemplate(String xingBaseUrl) {
         Assert.hasText(xingBaseUrl);

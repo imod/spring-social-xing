@@ -27,7 +27,7 @@ public class AbstractXingApiTest {
 	
 	@Before
 	public void setup() {
-		xing = new XingTemplate("API_KEY", "API_SECRET", "ACCESS_TOKEN", "ACCESS_TOKEN_SECRET");
+		xing = new XingTemplate("ACCESS_TOKEN");
 		mockServer = MockRestServiceServer.createServer(xing.getRestTemplate());
 		responseHeaders = new HttpHeaders();
 		responseHeaders.setContentType(MediaType.APPLICATION_JSON);

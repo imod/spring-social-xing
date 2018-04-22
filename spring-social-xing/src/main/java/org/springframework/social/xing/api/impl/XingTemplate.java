@@ -29,30 +29,33 @@ import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.social.oauth1.AbstractOAuth1ApiBinding;
+import org.springframework.social.oauth2.AbstractOAuth2ApiBinding;
 import org.springframework.social.support.HttpRequestDecorator;
 import org.springframework.social.xing.api.ConnectionOperations;
 import org.springframework.social.xing.api.ProfileOperations;
 import org.springframework.social.xing.api.Xing;
 import org.springframework.social.xing.api.impl.json.XingModule;
+import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestOperations;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.List;
 
 /**
  * This is the central class for interacting with Xing.
  * <p>
- * Greenhouse operations require OAuth authentication with the server.
+ * Xing operations require OAuth authentication with the server.
  * Therefore, XingTemplate must be constructed with the minimal information
- * required to sign requests with and OAuth 1 Authorization header.
+ * required to sign requests with and OAuth 2 Authorization header.
  * </p>
  * @author Craig Walls
  * @author Johannes Buehler
  */
-public class XingTemplate extends AbstractOAuth1ApiBinding implements Xing {
+public class XingTemplate extends AbstractOAuth2ApiBinding implements Xing {
 
     static final String DEFAULT_BASE_URL = "https://api.xing.com/v1";
 
@@ -65,34 +68,50 @@ public class XingTemplate extends AbstractOAuth1ApiBinding implements Xing {
 
     private static boolean interceptorsSupported = ClassUtils.isPresent("org.springframework.http.client.ClientHttpRequestInterceptor", XingTemplate.class.getClassLoader());
 
+  /**
+   * Creates a new XingTemplate given the minimal amount of information needed to sign requests with
+   * OAuth 2 credentials.
+   *
+   * @param accessToken an access token acquired through OAuth authentication with Xing
+   */
+  public XingTemplate(String accessToken) {
+  	this(null, accessToken);
+  }
 
 	/**
-	 * Creates a new XingTemplate given the minimal amount of information needed to sign requests with OAuth 1 credentials.
+	 * Creates a new XingTemplate given the minimal amount of information needed to sign requests with OAuth 2 credentials.
 	 * @param xingBaseUrl the base url of xing, if empty {@link org.springframework.social.xing.api.impl.AbstractTemplate#DEFAULT_BASE_URL} will be used.
-	 * @param consumerKey the application's API key
-	 * @param consumerSecret the application's API secret
 	 * @param accessToken an access token acquired through OAuth authentication with Xing
-	 * @param accessTokenSecret an access token secret acquired through OAuth authentication with Xing
 	 */
-	public XingTemplate(String xingBaseUrl, String consumerKey, String consumerSecret, String accessToken, String accessTokenSecret) {
-		super(consumerKey, consumerSecret, accessToken, accessTokenSecret);
+	public XingTemplate(String xingBaseUrl, String accessToken) {
+		super(accessToken);
 
-        this.xingBaseUrl =  StringUtils.isEmpty(xingBaseUrl) ? DEFAULT_BASE_URL : xingBaseUrl;;
+		this.xingBaseUrl =  StringUtils.isEmpty(xingBaseUrl) ? DEFAULT_BASE_URL : xingBaseUrl;
+
+		Assert.hasLength(accessToken, "Access token cannot be null or empty.");
+		registerOAuth2Interceptor(accessToken);
 
 		registerXingInJsonModule();
 		registerJsonFormatInterceptor();
 		initSubApis();
 	}
 
-	/**
-	 * Creates a new XingTemplate given the minimal amount of information needed to sign requests with OAuth 1 credentials.
-	 * @param consumerKey the application's API key
-	 * @param consumerSecret the application's API secret
-	 * @param accessToken an access token acquired through OAuth authentication with Xing
-	 * @param accessTokenSecret an access token secret acquired through OAuth authentication with Xing
-	 */
-	public XingTemplate(String consumerKey, String consumerSecret, String accessToken, String accessTokenSecret) {
-		this(null, consumerKey, consumerSecret, accessToken, accessTokenSecret);
+//	/**
+//	 * Creates a new XingTemplate given the minimal amount of information needed to sign requests with OAuth 1 credentials.
+//	 * @param consumerKey the application's API key
+//	 * @param consumerSecret the application's API secret
+//	 * @param accessToken an access token acquired through OAuth authentication with Xing
+//	 * @param accessTokenSecret an access token secret acquired through OAuth authentication with Xing
+//	 */
+//	public XingTemplate(String consumerKey, String consumerSecret, String accessToken, String accessTokenSecret) {
+//		this(null, consumerKey, consumerSecret, accessToken, accessTokenSecret);
+//	}
+
+
+	private void registerOAuth2Interceptor(String accessToken) {
+		List<ClientHttpRequestInterceptor> interceptors = getRestTemplate().getInterceptors();
+//		interceptors.add(new OAuth2TokenParameterRequestInterceptor(accessToken));
+		getRestTemplate().setInterceptors(interceptors);
 	}
 
 
@@ -165,5 +184,27 @@ public class XingTemplate extends AbstractOAuth1ApiBinding implements Xing {
 		}
 
 	}
+
+//	private static final class OAuth2TokenParameterRequestInterceptor implements ClientHttpRequestInterceptor {
+//		private final String accessToken;
+//
+//		public OAuth2TokenParameterRequestInterceptor(String accessToken) {
+//			this.accessToken = accessToken;
+//		}
+//
+//		public ClientHttpResponse intercept(final HttpRequest request, final byte[] body, ClientHttpRequestExecution execution) throws IOException {
+//			HttpRequest protectedResourceRequest = new HttpRequestDecorator(request) {
+//				@Override
+//				public URI getURI() {
+//					return URI.create(super.getURI().toString() + (((super.getURI().getQuery() == null) ? "?" : "&") + "access_token=" + accessToken));
+//				}
+//			};
+//
+//			// LinkedIn doesn't accept the OAuth2 Bearer token authorization header.
+//			protectedResourceRequest.getHeaders().remove("Authorization");
+//			return execution.execute(protectedResourceRequest, body);
+//		}
+//
+//	}
 
 }
